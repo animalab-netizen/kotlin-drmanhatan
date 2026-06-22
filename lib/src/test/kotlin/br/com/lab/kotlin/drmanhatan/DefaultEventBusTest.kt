@@ -41,4 +41,34 @@ class DefaultEventBusTest {
 
         assertEquals(0, deliveries)
     }
+
+    @Test
+    fun `publishes to observers in subscription order`() {
+        val deliveryOrder = mutableListOf<String>()
+        val bus = DefaultEventBus()
+
+        bus.subscribe(EventObserver { deliveryOrder += "first" })
+        bus.subscribe(EventObserver { deliveryOrder += "second" })
+
+        bus.publish(Event(name = "ordered_event"))
+
+        assertEquals(listOf("first", "second"), deliveryOrder)
+    }
+
+    @Test
+    fun `applies multiple enrichers in sequence`() {
+        val received = mutableListOf<Event>()
+        val bus = DefaultEventBus(
+            enrichers = listOf(
+                EventEnricher { event -> event.withAttribute("first", "1") },
+                EventEnricher { event -> event.withAttribute("second", "2") }
+            )
+        )
+
+        bus.subscribe(EventObserver { received += it })
+        bus.publish(Event(name = "custom"))
+
+        assertEquals("1", received.single().attributes["first"])
+        assertEquals("2", received.single().attributes["second"])
+    }
 }

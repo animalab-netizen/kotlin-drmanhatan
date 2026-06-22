@@ -6,9 +6,11 @@ import br.com.lab.kotlin.drmanhatan.DrManhatan
 import br.com.lab.kotlin.drmanhatan.Event
 import br.com.lab.kotlin.drmanhatan.EventFactory
 import br.com.lab.kotlin.drmanhatan.ProtocolEndpoint
+import br.com.lab.kotlin.drmanhatan.ProtocolFailure
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
+import okio.ByteString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -63,6 +65,66 @@ class OkHttpWebSocketTelemetryTest {
         assertEquals("protocol_failure", events[3].name)
         assertEquals("timeout", events[3].attributes["error.type"])
         assertEquals("true", events[3].attributes["error.retryable"])
+    }
+
+    @Test
+    fun `listener maps binary closing and closed callbacks`() {
+        val events = mutableListOf<Event>()
+        val tracker = tracker(events)
+        val telemetry = tracker.okHttpWebSocketTelemetry(
+            OkHttpWebSocketTelemetryConfig(
+                endpoint = ProtocolEndpoint(name = "binary-chat"),
+                classifyBinaryOperation = { "binary_frame" },
+                connectionStartedOnCreate = false
+            )
+        )
+
+        telemetry.connectionStarted()
+        telemetry.listener.onMessage(FakeWebSocket, ByteString.of(*"010101".toByteArray()))
+        telemetry.listener.onClosing(FakeWebSocket, 1000, "normal closure")
+        telemetry.listener.onClosed(FakeWebSocket, 1000, "normal closure")
+
+        assertEquals(4, events.size)
+        assertEquals("protocol_message", events[1].name)
+        assertEquals("binary", events[1].attributes["message.type"])
+        assertEquals("binary_frame", events[1].attributes["message.operation"])
+        assertEquals("6", events[1].attributes["message.size_bytes"])
+        assertEquals("protocol_connection_closed", events[2].name)
+        assertEquals("closing", events[2].attributes["close.phase"])
+        assertEquals("protocol_connection_closed", events[3].name)
+        assertEquals("closed", events[3].attributes["close.phase"])
+    }
+
+    @Test
+    fun `listener uses custom failure mapper when provided`() {
+        val events = mutableListOf<Event>()
+        val tracker = tracker(events)
+        val telemetry = tracker.okHttpWebSocketTelemetry(
+            OkHttpWebSocketTelemetryConfig(
+                endpoint = ProtocolEndpoint(name = "presence"),
+                connectionStartedOnCreate = false,
+                failureMapper = { throwable, _ ->
+                    ProtocolFailure(
+                        code = "CUSTOM",
+                        type = "mapped",
+                        message = throwable.message,
+                        retryable = false
+                    )
+                }
+            )
+        )
+
+        telemetry.listener.onFailure(
+            FakeWebSocket,
+            IllegalStateException("custom failure"),
+            null
+        )
+
+        assertEquals(1, events.size)
+        assertEquals("protocol_failure", events.single().name)
+        assertEquals("CUSTOM", events.single().attributes["error.code"])
+        assertEquals("mapped", events.single().attributes["error.type"])
+        assertEquals("false", events.single().attributes["error.retryable"])
     }
 
     private fun tracker(events: MutableList<Event>): DrManhatan {

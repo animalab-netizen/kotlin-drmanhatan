@@ -118,4 +118,24 @@ class EventFactoryTest {
         assertEquals("heartbeat_timeout", event.attributes["reconnect.reason"])
         assertEquals("ws-7", event.attributes["session.id"])
     }
+
+    @Test
+    fun `builds custom event with common metadata and custom enrichers`() {
+        val customFactory = EventFactory(
+            metadata = CommonMetadata(appVersion = "3.0.0"),
+            customEnrichers = listOf(
+                EventEnricher { event -> event.withAttribute("tenant", "anima") }
+            )
+        )
+
+        val event = customFactory.custom(
+            name = "custom_event",
+            attributes = mapOf("feature" to "chat")
+        )
+
+        assertEquals("custom_event", event.name)
+        assertEquals("chat", event.attributes["feature"])
+        assertEquals("3.0.0", event.attributes["app.version"])
+        assertEquals("anima", event.attributes["tenant"])
+    }
 }

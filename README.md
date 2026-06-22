@@ -17,6 +17,41 @@ The project provides a small runtime for:
 
 The goal is to make event flow easier to standardize, easier to reason about, and less vulnerable to common implementation mistakes around vendor coupling, protocol lifecycle tracking, retry visibility and message-oriented observability.
 
+## Why Use DrManhatan
+
+`kotlin-drmanhatan` is useful when a system needs observability but should not let transport or telemetry concerns leak into business code.
+
+Typical gains include:
+
+- a single event vocabulary across UI, network and protocol layers
+- lower coupling to analytics, logging and monitoring vendors
+- easier migration between providers because the domain emits neutral events
+- more explicit communication timelines for stateful protocols
+- better operational visibility during failures, retries and reconnect flows
+
+In practice, this means teams can treat observability as part of architecture instead of as scattered implementation detail.
+
+## Asynchronous Work
+
+The library is especially useful in asynchronous and message-oriented systems.
+
+Asynchrony usually makes systems harder to interpret because cause and effect are separated in time:
+
+- a connection starts in one place
+- a message arrives later in another place
+- a retry is scheduled elsewhere
+- an error is observed after the original action has already left the current call stack
+
+`kotlin-drmanhatan` improves this by giving those steps a shared event model and a shared session context.
+
+This helps teams:
+
+- reconstruct communication timelines more reliably
+- track retries and reconnects without inventing ad hoc logging everywhere
+- correlate outbound intent with inbound outcomes
+- expose protocol failures with enough metadata to support analysis and debugging
+- keep asynchronous work observable without forcing domain code to know the final monitoring backend
+
 ## What DrManhatan Does Not Claim
 
 `kotlin-drmanhatan` does not try to replace your network stack, your analytics provider or your monitoring backend.

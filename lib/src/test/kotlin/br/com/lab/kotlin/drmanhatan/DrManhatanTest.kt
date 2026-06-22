@@ -97,4 +97,33 @@ class DrManhatanTest {
         assertEquals("protocol_connection_closed", events[5].name)
         assertEquals("1001", events[5].attributes["close.code"])
     }
+
+    @Test
+    fun `tracks heartbeat sent as outbound message`() {
+        val events = mutableListOf<Event>()
+        val bus = DefaultEventBus()
+        bus.subscribe(EventObserver { events += it })
+
+        val tracker = DrManhatan(
+            bus = bus,
+            factory = EventFactory(
+                metadata = CommonMetadata(appVersion = "1.0.0")
+            )
+        )
+
+        val session = tracker.protocolSession(
+            protocol = Protocol.Mqtt,
+            endpoint = ProtocolEndpoint(name = "broker"),
+            sessionId = "mqtt-9"
+        )
+
+        session.heartbeatSent(correlationId = "hb-out-1")
+
+        assertEquals(1, events.size)
+        assertEquals("protocol_message", events.single().name)
+        assertEquals("outbound", events.single().attributes["message.direction"])
+        assertEquals("heartbeat", events.single().attributes["message.operation"])
+        assertEquals("hb-out-1", events.single().attributes["message.correlation_id"])
+        assertEquals("mqtt", events.single().attributes["protocol.name"])
+    }
 }
