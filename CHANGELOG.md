@@ -2,7 +2,7 @@
 
 ## 0.1.0
 
-- primeira extracao publica do conceito originalmente validado em `core-event`
+- primeira release publica do `drmanhatan`
 - biblioteca Kotlin/JVM sem dependencia de Android
 - eventos imutaveis com nome e atributos
 - pipeline de enriquecimento via `EventEnricher`

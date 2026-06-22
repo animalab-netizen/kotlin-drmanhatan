@@ -39,10 +39,10 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-            artifactId = "drmanhatan"
+            artifactId = "kotlin-drmanhatan"
 
             pom {
-                name.set("drmanhatan")
+                name.set("kotlin-drmanhatan")
                 description.set("Observable event support for Kotlin applications without coupling to analytics vendors.")
                 url.set(projectUrl)
 

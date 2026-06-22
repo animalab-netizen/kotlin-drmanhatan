@@ -2,84 +2,189 @@
 
 [![CI](https://github.com/animalab-netizen/kotlin-drmanhatan/actions/workflows/ci.yml/badge.svg)](https://github.com/animalab-netizen/kotlin-drmanhatan/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/animalab-netizen/kotlin-drmanhatan/blob/main/LICENSE)
-[![Maven Central](https://img.shields.io/maven-central/v/io.animalab/drmanhatan)](https://central.sonatype.com/search?q=io.animalab%3Adrmanhatan)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.animalab-netizen/kotlin-drmanhatan)](https://central.sonatype.com/search?q=io.github.animalab-netizen%3Akotlin-drmanhatan)
 
-`drmanhatan` e uma biblioteca Kotlin para observabilidade de eventos sem acoplar o dominio a um provider de analytics, log ou telemetria.
+`kotlin-drmanhatan` is a Kotlin library by ÂnimaLab for teams that want a stable and explicit way to observe application events and communication flows without coupling domain code to analytics, telemetry or transport vendors.
 
-Repositorio oficial planejado:
+The project provides a small runtime for:
 
-- [animalab-netizen/kotlin-drmanhatan](https://github.com/animalab-netizen/kotlin-drmanhatan)
+- immutable event modeling
+- event enrichment pipelines
+- observer-based event delivery
+- communication and protocol telemetry
+- session-oriented tracking for stateful channels
+- optional integration with real transport engines such as OkHttp WebSocket
 
-Coordenada Maven planejada:
+The goal is to make event flow easier to standardize, easier to reason about, and less vulnerable to common implementation mistakes around vendor coupling, protocol lifecycle tracking, retry visibility and message-oriented observability.
 
-- `io.animalab:drmanhatan`
+## What DrManhatan Does Not Claim
 
-O repositorio da biblioteca fica isolado do consumer, para refletir o alvo real de publicacao:
+`kotlin-drmanhatan` does not try to replace your network stack, your analytics provider or your monitoring backend.
 
-- `kotlin-drmanhatan`: projeto da biblioteca
-- `kotlin-drmanhatan-consumer`: projeto separado que consome o artefato por coordenada Maven
+It does not open WebSocket connections, execute HTTP calls or guarantee that every team will model events with identical naming conventions. The library is intentionally narrower than that: it standardizes event construction, enrichment and publication so the rest of the system can evolve without forcing the domain layer to know too much about the final destination of those events.
 
-Ela nasce a partir da analise do modulo `core-event`, preservando a ideia central e removendo os pontos que impediam publicacao como produto open source:
+The reason is pragmatic: a communication observability library should make transport and vendor integration easier, not become another hard dependency that application code cannot escape later.
 
-- sem dependencia de Android
-- sem reflection para criar trackers
-- sem estado oculto em builders
-- eventos imutaveis e tipados
-- observadores desacoplados do destino final
+## Repository
 
-## Diagnostico do `core-event`
+- source: [github.com/animalab-netizen/kotlin-drmanhatan](https://github.com/animalab-netizen/kotlin-drmanhatan)
 
-O conceito do modulo original e valido. Ele resolve um problema real: enriquecer eventos de interface e infraestrutura sem criar dependencia direta com Firebase, Datadog, New Relic ou qualquer handler concreto.
+## Status
 
-Os principais problemas encontrados foram:
+`kotlin-drmanhatan` is in early stage and evolving toward public Maven/Gradle distribution.
 
-- o projeto atual e uma Android Library, embora o nucleo nao precise de Android
-- a API usa reflection em `EventFactoryMethod.Build`, o que fragiliza construcao e testes
-- `CommonEventConfig` fixa `appVersion = "0.0.1"`, o que impede uso real em producao
-- toda a semantica do evento e uma `Map<String, String>` sem identidade explicita do evento
-- o build esta misturando fonte de biblioteca com artefatos locais de IDE e Android Studio
+The API is usable and already validated through a separate consumer project, but it is still under refinement. Expect incremental improvements in publication maturity, adapter coverage and protocol semantics as the library evolves.
 
-## Arquitetura da nova lib
+## Coordinates
 
-`drmanhatan` separa o problema em quatro partes:
+Current coordinates:
 
-1. `Event`: evento imutavel com nome e atributos.
-2. `EventEnricher`: componente que adiciona contexto sem conhecer o destino.
-3. `EventBus`: publica eventos para um ou mais observadores.
-4. `DrManhatan`: facade que cria eventos comuns e dispara o pipeline.
+- `groupId`: `io.github.animalab-netizen`
+- `artifactId`: `kotlin-drmanhatan`
+- `version`: `0.1.0`
 
-## Suporte a protocolos
+Dependency:
 
-O `drmanhatan` agora tambem cobre protocolos stateful e orientados a mensagem sem depender da stack de rede. Isso e util quando a ODE ou outra lib de dominio ainda nao consegue representar bem:
+```gradle
+dependencies {
+    implementation "io.github.animalab-netizen:kotlin-drmanhatan:0.1.0"
+}
+```
+
+## Repositories
+
+For local development:
+
+```gradle
+repositories {
+    mavenLocal()
+}
+```
+
+For public distribution, prefer Maven Central:
+
+```gradle
+repositories {
+    mavenCentral()
+}
+```
+
+## Installation
+
+Example `build.gradle`:
+
+```gradle
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation "io.github.animalab-netizen:kotlin-drmanhatan:0.1.0"
+}
+```
+
+## Public API
+
+The intended public surface of `kotlin-drmanhatan` is centered on these concepts:
+
+- `Event`
+- `EventEnricher`
+- `EventBus`
+- `DefaultEventBus`
+- `EventFactory`
+- `DrManhatan`
+- `Protocol`
+- `ProtocolEndpoint`
+- `ProtocolMessage`
+- `ProtocolFailure`
+- `ProtocolClose`
+- `ProtocolSessionTracker`
+- `WebSocketSessionTracker`
+- `OkHttpWebSocketTelemetry`
+- `OkHttpWebSocketTelemetryConfig`
+
+Internal publication details, local scripts and workflow implementation details are intentionally not part of the product contract and may change without notice.
+
+## Core Concepts
+
+### 1. Event
+
+`Event` is the immutable unit of observation in the library.
+
+It gives the system:
+
+- a stable event name
+- explicit string attributes
+- a simple representation that can be forwarded to logs, analytics, metrics or custom observers
+
+### 2. Enricher
+
+`EventEnricher` adds context without requiring the producer to know the final destination of the event.
+
+Typical usage includes:
+
+- app version
+- platform
+- environment
+- protocol metadata
+- transport-specific attributes
+
+### 3. EventBus
+
+`EventBus` publishes events to one or more observers.
+
+This keeps event production separate from event handling, so application code does not need to bind directly to a specific monitoring vendor or output mechanism.
+
+### 4. EventFactory
+
+`EventFactory` is the main construction layer for common event categories.
+
+It provides helpers for:
+
+- screen events
+- tap events
+- HTTP failures
+- protocol connection lifecycle
+- message-oriented communication events
+- WebSocket-specific convenience builders
+
+### 5. Protocol Sessions
+
+`ProtocolSessionTracker` and `WebSocketSessionTracker` provide a higher-level model for stateful communication.
+
+This is the preferred abstraction when the important thing is not one isolated event, but the whole communication timeline:
+
+- connection started
+- connection opened
+- inbound and outbound messages
+- heartbeat signals
+- reconnect scheduling
+- failure
+- close
+
+## Protocol Coverage
+
+`kotlin-drmanhatan` covers stateful and message-oriented protocols without depending on a specific transport engine.
+
+This includes use cases such as:
 
 - WebSocket
 - SSE
 - gRPC streaming
 - MQTT
-- TCP/UDP customizados
+- custom TCP/UDP communication channels
 
-O papel da lib aqui nao e abrir conexoes. O papel dela e padronizar telemetria de:
+The purpose is not transport execution. The purpose is observability of protocol lifecycle and message flow.
 
-- tentativa de conexao
-- conexao aberta
-- trafego de mensagens de entrada e saida
-- heartbeat e health signals
-- reconexao e politica de retry
-- encerramento de sessao
-- falhas de protocolo e transporte
-
-## Integracao com engines reais
-
-O nucleo continua independente de transporte, mas a biblioteca agora tambem oferece uma integracao inicial com OkHttp WebSocket para JVM/Android. A integracao traduz callbacks do `WebSocketListener` para eventos do `drmanhatan`.
-
-## Exemplo de uso
+## Basic Example
 
 ```kotlin
-import io.animalab.drmanhatan.CommonMetadata
-import io.animalab.drmanhatan.DefaultEventBus
-import io.animalab.drmanhatan.DrManhatan
-import io.animalab.drmanhatan.EventFactory
-import io.animalab.drmanhatan.HttpError
+import br.com.lab.kotlin.drmanhatan.CommonMetadata
+import br.com.lab.kotlin.drmanhatan.DefaultEventBus
+import br.com.lab.kotlin.drmanhatan.DrManhatan
+import br.com.lab.kotlin.drmanhatan.EventFactory
+import br.com.lab.kotlin.drmanhatan.HttpError
 
 val bus = DefaultEventBus()
 bus.subscribe { event ->
@@ -102,29 +207,16 @@ tracker.tap("Home", "OpenProfile")
 tracker.httpError("Checkout", HttpError(code = 500, type = "server_error"))
 ```
 
-## Estrutura do projeto
-
-```text
-kotlin-drmanhatan-projects/
-  kotlin-drmanhatan/
-    lib/
-      src/main/kotlin/...
-      src/test/kotlin/...
-  kotlin-drmanhatan-consumer/
-```
-
-O codigo-fonte da biblioteca fica em `lib/src/main/kotlin` e os testes em `lib/src/test/kotlin`. O consumer fica fora do build da lib para simular o uso futuro por dependencia publicada.
-
-### Exemplo com WebSocket
+## WebSocket Example
 
 ```kotlin
-import io.animalab.drmanhatan.CommonMetadata
-import io.animalab.drmanhatan.DefaultEventBus
-import io.animalab.drmanhatan.DrManhatan
-import io.animalab.drmanhatan.EventFactory
-import io.animalab.drmanhatan.ProtocolClose
-import io.animalab.drmanhatan.ProtocolEndpoint
-import io.animalab.drmanhatan.ProtocolFailure
+import br.com.lab.kotlin.drmanhatan.CommonMetadata
+import br.com.lab.kotlin.drmanhatan.DefaultEventBus
+import br.com.lab.kotlin.drmanhatan.DrManhatan
+import br.com.lab.kotlin.drmanhatan.EventFactory
+import br.com.lab.kotlin.drmanhatan.ProtocolClose
+import br.com.lab.kotlin.drmanhatan.ProtocolEndpoint
+import br.com.lab.kotlin.drmanhatan.ProtocolFailure
 
 val bus = DefaultEventBus()
 bus.subscribe { event ->
@@ -181,7 +273,7 @@ tracker.webSocketConnectionClosed(
 )
 ```
 
-### Exemplo com sessao de comunicacao
+## Session Example
 
 ```kotlin
 val session = tracker.webSocketSession(
@@ -207,12 +299,12 @@ session.closed(
 )
 ```
 
-### Exemplo com OkHttp WebSocket
+## OkHttp WebSocket Example
 
 ```kotlin
-import io.animalab.drmanhatan.ProtocolEndpoint
-import io.animalab.drmanhatan.okhttp.OkHttpWebSocketTelemetryConfig
-import io.animalab.drmanhatan.okhttp.okHttpWebSocketTelemetry
+import br.com.lab.kotlin.drmanhatan.ProtocolEndpoint
+import br.com.lab.kotlin.drmanhatan.okhttp.OkHttpWebSocketTelemetryConfig
+import br.com.lab.kotlin.drmanhatan.okhttp.okHttpWebSocketTelemetry
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -241,93 +333,79 @@ client.newWebSocket(
 )
 ```
 
-## Consumer de exemplo
+## Consumer Project
 
-O consumer executavel fica em [ConsumerApp.kt](/Users/caiosanchezchristino/Desktop/drmanhatan-projects/kotlin-drmanhatan-consumer/src/main/kotlin/io/animalab/drmanhatan/consumer/ConsumerApp.kt) e demonstra:
+The separate consumer project lives locally in this workspace at [ConsumerApp.kt](/Users/caiosanchezchristino/Desktop/drmanhatan-projects/kotlin-drmanhatan-consumer/src/main/kotlin/io/animalab/drmanhatan/consumer/ConsumerApp.kt).
 
-- eventos de tela e tap
-- erro HTTP
-- sessao WebSocket observada diretamente pelo `drmanhatan`
-- integracao com callbacks do OkHttp WebSocket
+Its purpose is to validate the real adoption mode:
 
-Ele consome a biblioteca por coordenada Maven, nao por `project(":lib")`.
+- the library is published as an artifact
+- consumers import the artifact through dependencies
+- consumers do not depend on `project(":lib")`
 
-Quando o ambiente tiver Gradle disponivel, o fluxo local esperado e:
+## Publishing
+
+Publish locally:
 
 ```bash
-./scripts/test-lib.sh
 ./scripts/publish-local.sh
 ```
 
-Se quiser executar manualmente pelo wrapper:
-
-```bash
-source ./scripts/env.sh
-./gradlew :lib:test
-./gradlew :lib:publishToMavenLocal
-```
-
-## Publicacao
-
-A estrutura ja esta preparada para publicacao Maven via `maven-publish` e ja conta com base inicial de open source:
-
-- `LICENSE`
-- `CHANGELOG.md`
-- CI
-
-Ainda faltam para um lancamento publico formal:
-
-- assinatura/publicacao real
-- definicao final de coordenadas Maven da AnimaLab
-- repositorio publico oficial
-- validacao juridica do nome
-
-### Destinos preparados
-
-- GitHub Packages: `https://maven.pkg.github.com/animalab-netizen/kotlin-drmanhatan`
-- Sonatype OSSRH / Maven Central: `s01.oss.sonatype.org`
-
-### Credenciais esperadas
-
-GitHub Packages:
-
-- `GITHUB_ACTOR` e `GITHUB_TOKEN`
-- ou `gpr.user` e `gpr.key`
-
-Sonatype:
-
-- `OSSRH_USERNAME` e `OSSRH_PASSWORD`
-- ou `ossrhUsername` e `ossrhPassword`
-
-Assinatura:
-
-- `SIGNING_KEY` e `SIGNING_PASSWORD`
-- ou `signingKey` e `signingPassword`
-
-### Comandos de publicacao
-
-GitHub Packages:
+Publish to GitHub Packages:
 
 ```bash
 source ./scripts/env.sh
 ./gradlew :lib:publishMavenJavaPublicationToGitHubPackagesRepository
 ```
 
-Sonatype / Maven Central:
+Publish to Sonatype / Maven Central:
 
 ```bash
 source ./scripts/env.sh
 ./gradlew :lib:publishMavenJavaPublicationToSonatypeRepository
 ```
 
-## Operacao local
+For Sonatype publishing, provide credentials and signing material through CI secrets or untracked Gradle properties.
 
-Este repositorio inclui scripts locais para evitar repetir configuracao de shell:
+## Local Validation
 
-- [scripts/env.sh](/Users/caiosanchezchristino/Desktop/drmanhatan-projects/drmanhatan/scripts/env.sh)
-- [scripts/test-lib.sh](/Users/caiosanchezchristino/Desktop/drmanhatan-projects/drmanhatan/scripts/test-lib.sh)
-- [scripts/publish-local.sh](/Users/caiosanchezchristino/Desktop/drmanhatan-projects/drmanhatan/scripts/publish-local.sh)
+Run the library tests:
 
-## Nota de marca
+```bash
+./scripts/test-lib.sh
+```
 
-O nome `drmanhatan` funciona como nome tecnico interno nesta primeira versao, mas como ele foi inspirado explicitamente em um personagem da DC Comics, vale uma revisao juridica antes de publicacao publica para reduzir risco de marca.
+Run the full local flow from the workspace root:
+
+```bash
+./scripts/bootstrap.sh
+```
+
+This executes:
+
+1. library tests
+2. local publication to `mavenLocal`
+3. separate consumer execution
+
+## Compatibility Notes
+
+The library is Kotlin/JVM-first and currently validated with Java 22 in local and CI environments.
+
+The OkHttp integration is optional and intentionally kept as an adapter layer so the core runtime remains independent from transport vendors.
+
+## Contributing
+
+See [CONTRIBUTING.md](/Users/caiosanchezchristino/Desktop/drmanhatan-projects/kotlin-drmanhatan/CONTRIBUTING.md).
+
+## Changelog
+
+See [CHANGELOG.md](/Users/caiosanchezchristino/Desktop/drmanhatan-projects/kotlin-drmanhatan/CHANGELOG.md).
+
+## Maintainer
+
+- name: `ÂnimaLab`
+- email: `animalab.desenvolvimento@gmail.com`
+
+## License
+
+This project is licensed under Apache-2.0. See [LICENSE](/Users/caiosanchezchristino/Desktop/drmanhatan-projects/kotlin-drmanhatan/LICENSE).

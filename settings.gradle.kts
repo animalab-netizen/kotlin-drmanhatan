@@ -1,3 +1,3 @@
-rootProject.name = "drmanhatan"
+rootProject.name = "kotlin-drmanhatan"
 
 include(":lib")
