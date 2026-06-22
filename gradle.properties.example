@@ -1,0 +1,11 @@
+# Copy the values you need into ~/.gradle/gradle.properties
+# or export them as environment variables before publishing.
+
+gpr.user=github-user
+gpr.key=github-token
+
+ossrhUsername=sonatype-user
+ossrhPassword=sonatype-password
+
+signingKey=base64-or-armored-pgp-private-key
+signingPassword=pgp-passphrase
