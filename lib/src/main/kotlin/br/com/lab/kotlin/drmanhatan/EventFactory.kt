@@ -1,6 +1,6 @@
 package br.com.lab.kotlin.drmanhatan
 
-class EventFactory(
+public class EventFactory(
     metadata: CommonMetadata? = null,
     private val customEnrichers: List<EventEnricher> = emptyList()
 ) {
@@ -11,7 +11,7 @@ class EventFactory(
         addAll(customEnrichers)
     }
 
-    fun screenViewed(screenName: String): Event =
+    public fun screenViewed(screenName: String): Event =
         enrich(
             Event(
                 name = "screen_viewed",
@@ -19,7 +19,7 @@ class EventFactory(
             )
         )
 
-    fun tap(screenName: String, action: String): Event =
+    public fun tap(screenName: String, action: String): Event =
         enrich(
             Event(
                 name = "tap",
@@ -30,7 +30,7 @@ class EventFactory(
             )
         )
 
-    fun httpError(screenName: String, error: HttpError): Event =
+    public fun httpError(screenName: String, error: HttpError): Event =
         enrich(
             Event(
                 name = "http_error",
@@ -43,10 +43,10 @@ class EventFactory(
             )
         )
 
-    fun custom(name: String, attributes: Map<String, String> = emptyMap()): Event =
+    public fun custom(name: String, attributes: Map<String, String> = emptyMap()): Event =
         enrich(Event(name = name, attributes = attributes))
 
-    fun protocolConnectionStarted(
+    public fun protocolConnectionStarted(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         sessionId: String? = null,
@@ -59,7 +59,7 @@ class EventFactory(
         attributes = attributes
     )
 
-    fun protocolConnectionOpened(
+    public fun protocolConnectionOpened(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         sessionId: String? = null,
@@ -72,7 +72,7 @@ class EventFactory(
         attributes = attributes
     )
 
-    fun protocolMessage(
+    public fun protocolMessage(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         message: ProtocolMessage,
@@ -85,7 +85,7 @@ class EventFactory(
         attributes = message.asAttributes()
     )
 
-    fun protocolConnectionClosed(
+    public fun protocolConnectionClosed(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         close: ProtocolClose = ProtocolClose(),
@@ -98,7 +98,7 @@ class EventFactory(
         attributes = close.asAttributes()
     )
 
-    fun protocolFailure(
+    public fun protocolFailure(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         failure: ProtocolFailure,
@@ -111,7 +111,7 @@ class EventFactory(
         attributes = failure.asAttributes()
     )
 
-    fun protocolReconnectScheduled(
+    public fun protocolReconnectScheduled(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         attempt: Int,
@@ -132,7 +132,7 @@ class EventFactory(
         }
     )
 
-    fun webSocketConnectionStarted(
+    public fun webSocketConnectionStarted(
         endpoint: ProtocolEndpoint,
         sessionId: String? = null,
         attributes: Map<String, String> = emptyMap()
@@ -143,7 +143,7 @@ class EventFactory(
         attributes = attributes
     )
 
-    fun webSocketConnectionOpened(
+    public fun webSocketConnectionOpened(
         endpoint: ProtocolEndpoint,
         sessionId: String? = null,
         attributes: Map<String, String> = emptyMap()
@@ -154,7 +154,7 @@ class EventFactory(
         attributes = attributes
     )
 
-    fun webSocketMessageSent(
+    public fun webSocketMessageSent(
         endpoint: ProtocolEndpoint,
         operation: String? = null,
         type: String? = null,
@@ -176,7 +176,7 @@ class EventFactory(
         sessionId = sessionId
     )
 
-    fun webSocketMessageReceived(
+    public fun webSocketMessageReceived(
         endpoint: ProtocolEndpoint,
         operation: String? = null,
         type: String? = null,
@@ -198,7 +198,7 @@ class EventFactory(
         sessionId = sessionId
     )
 
-    fun webSocketConnectionClosed(
+    public fun webSocketConnectionClosed(
         endpoint: ProtocolEndpoint,
         close: ProtocolClose = ProtocolClose(),
         sessionId: String? = null
@@ -209,7 +209,7 @@ class EventFactory(
         sessionId = sessionId
     )
 
-    fun webSocketFailure(
+    public fun webSocketFailure(
         endpoint: ProtocolEndpoint,
         failure: ProtocolFailure,
         sessionId: String? = null
@@ -220,7 +220,7 @@ class EventFactory(
         sessionId = sessionId
     )
 
-    fun webSocketReconnectScheduled(
+    public fun webSocketReconnectScheduled(
         endpoint: ProtocolEndpoint,
         attempt: Int,
         delayMillis: Long,

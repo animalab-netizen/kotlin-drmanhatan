@@ -1,30 +1,30 @@
 package br.com.lab.kotlin.drmanhatan
 
-class DrManhatan(
+public class DrManhatan(
     private val bus: EventBus,
     private val factory: EventFactory
 ) {
-    fun publish(event: Event) {
+    public fun publish(event: Event) {
         bus.publish(event)
     }
 
-    fun screenViewed(screenName: String) {
+    public fun screenViewed(screenName: String) {
         publish(factory.screenViewed(screenName))
     }
 
-    fun tap(screenName: String, action: String) {
+    public fun tap(screenName: String, action: String) {
         publish(factory.tap(screenName, action))
     }
 
-    fun httpError(screenName: String, error: HttpError) {
+    public fun httpError(screenName: String, error: HttpError) {
         publish(factory.httpError(screenName, error))
     }
 
-    fun custom(name: String, attributes: Map<String, String> = emptyMap()) {
+    public fun custom(name: String, attributes: Map<String, String> = emptyMap()) {
         publish(factory.custom(name, attributes))
     }
 
-    fun protocolConnectionStarted(
+    public fun protocolConnectionStarted(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         sessionId: String? = null,
@@ -33,7 +33,7 @@ class DrManhatan(
         publish(factory.protocolConnectionStarted(protocol, endpoint, sessionId, attributes))
     }
 
-    fun protocolConnectionOpened(
+    public fun protocolConnectionOpened(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         sessionId: String? = null,
@@ -42,7 +42,7 @@ class DrManhatan(
         publish(factory.protocolConnectionOpened(protocol, endpoint, sessionId, attributes))
     }
 
-    fun protocolMessage(
+    public fun protocolMessage(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         message: ProtocolMessage,
@@ -51,7 +51,7 @@ class DrManhatan(
         publish(factory.protocolMessage(protocol, endpoint, message, sessionId))
     }
 
-    fun protocolConnectionClosed(
+    public fun protocolConnectionClosed(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         close: ProtocolClose = ProtocolClose(),
@@ -60,7 +60,7 @@ class DrManhatan(
         publish(factory.protocolConnectionClosed(protocol, endpoint, close, sessionId))
     }
 
-    fun protocolFailure(
+    public fun protocolFailure(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         failure: ProtocolFailure,
@@ -69,7 +69,7 @@ class DrManhatan(
         publish(factory.protocolFailure(protocol, endpoint, failure, sessionId))
     }
 
-    fun protocolReconnectScheduled(
+    public fun protocolReconnectScheduled(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         attempt: Int,
@@ -91,7 +91,7 @@ class DrManhatan(
         )
     }
 
-    fun webSocketConnectionStarted(
+    public fun webSocketConnectionStarted(
         endpoint: ProtocolEndpoint,
         sessionId: String? = null,
         attributes: Map<String, String> = emptyMap()
@@ -99,7 +99,7 @@ class DrManhatan(
         publish(factory.webSocketConnectionStarted(endpoint, sessionId, attributes))
     }
 
-    fun webSocketConnectionOpened(
+    public fun webSocketConnectionOpened(
         endpoint: ProtocolEndpoint,
         sessionId: String? = null,
         attributes: Map<String, String> = emptyMap()
@@ -107,7 +107,7 @@ class DrManhatan(
         publish(factory.webSocketConnectionOpened(endpoint, sessionId, attributes))
     }
 
-    fun webSocketMessageSent(
+    public fun webSocketMessageSent(
         endpoint: ProtocolEndpoint,
         operation: String? = null,
         type: String? = null,
@@ -129,7 +129,7 @@ class DrManhatan(
         )
     }
 
-    fun webSocketMessageReceived(
+    public fun webSocketMessageReceived(
         endpoint: ProtocolEndpoint,
         operation: String? = null,
         type: String? = null,
@@ -151,7 +151,7 @@ class DrManhatan(
         )
     }
 
-    fun webSocketConnectionClosed(
+    public fun webSocketConnectionClosed(
         endpoint: ProtocolEndpoint,
         close: ProtocolClose = ProtocolClose(),
         sessionId: String? = null
@@ -159,7 +159,7 @@ class DrManhatan(
         publish(factory.webSocketConnectionClosed(endpoint, close, sessionId))
     }
 
-    fun webSocketFailure(
+    public fun webSocketFailure(
         endpoint: ProtocolEndpoint,
         failure: ProtocolFailure,
         sessionId: String? = null
@@ -167,7 +167,7 @@ class DrManhatan(
         publish(factory.webSocketFailure(endpoint, failure, sessionId))
     }
 
-    fun webSocketReconnectScheduled(
+    public fun webSocketReconnectScheduled(
         endpoint: ProtocolEndpoint,
         attempt: Int,
         delayMillis: Long,
@@ -187,7 +187,7 @@ class DrManhatan(
         )
     }
 
-    fun protocolSession(
+    public fun protocolSession(
         protocol: Protocol,
         endpoint: ProtocolEndpoint,
         sessionId: String? = null
@@ -198,7 +198,7 @@ class DrManhatan(
         sessionId = sessionId
     )
 
-    fun webSocketSession(
+    public fun webSocketSession(
         endpoint: ProtocolEndpoint,
         sessionId: String? = null
     ): WebSocketSessionTracker = WebSocketSessionTracker(

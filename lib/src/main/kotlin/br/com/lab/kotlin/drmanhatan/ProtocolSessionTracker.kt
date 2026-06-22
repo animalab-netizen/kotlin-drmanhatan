@@ -1,24 +1,24 @@
 package br.com.lab.kotlin.drmanhatan
 
-open class ProtocolSessionTracker(
+public open class ProtocolSessionTracker(
     private val drManhatan: DrManhatan,
     private val protocol: Protocol,
-    val endpoint: ProtocolEndpoint,
-    val sessionId: String? = null
+    public val endpoint: ProtocolEndpoint,
+    public val sessionId: String? = null
 ) {
-    fun connectionStarted(attributes: Map<String, String> = emptyMap()) {
+    public fun connectionStarted(attributes: Map<String, String> = emptyMap()) {
         drManhatan.protocolConnectionStarted(protocol, endpoint, sessionId, attributes)
     }
 
-    fun connectionOpened(attributes: Map<String, String> = emptyMap()) {
+    public fun connectionOpened(attributes: Map<String, String> = emptyMap()) {
         drManhatan.protocolConnectionOpened(protocol, endpoint, sessionId, attributes)
     }
 
-    fun message(message: ProtocolMessage) {
+    public fun message(message: ProtocolMessage) {
         drManhatan.protocolMessage(protocol, endpoint, message, sessionId)
     }
 
-    fun inboundMessage(
+    public fun inboundMessage(
         operation: String? = null,
         type: String? = null,
         correlationId: String? = null,
@@ -37,7 +37,7 @@ open class ProtocolSessionTracker(
         )
     }
 
-    fun outboundMessage(
+    public fun outboundMessage(
         operation: String? = null,
         type: String? = null,
         correlationId: String? = null,
@@ -56,7 +56,7 @@ open class ProtocolSessionTracker(
         )
     }
 
-    fun heartbeatSent(
+    public fun heartbeatSent(
         correlationId: String? = null,
         attributes: Map<String, String> = emptyMap()
     ) {
@@ -68,7 +68,7 @@ open class ProtocolSessionTracker(
         )
     }
 
-    fun heartbeatReceived(
+    public fun heartbeatReceived(
         correlationId: String? = null,
         attributes: Map<String, String> = emptyMap()
     ) {
@@ -80,7 +80,7 @@ open class ProtocolSessionTracker(
         )
     }
 
-    fun reconnectScheduled(
+    public fun reconnectScheduled(
         attempt: Int,
         delayMillis: Long,
         reason: String? = null,
@@ -97,11 +97,11 @@ open class ProtocolSessionTracker(
         )
     }
 
-    fun failure(failure: ProtocolFailure) {
+    public fun failure(failure: ProtocolFailure) {
         drManhatan.protocolFailure(protocol, endpoint, failure, sessionId)
     }
 
-    fun closed(close: ProtocolClose = ProtocolClose()) {
+    public fun closed(close: ProtocolClose = ProtocolClose()) {
         drManhatan.protocolConnectionClosed(protocol, endpoint, close, sessionId)
     }
 }

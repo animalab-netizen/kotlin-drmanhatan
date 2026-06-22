@@ -1,12 +1,12 @@
 package br.com.lab.kotlin.drmanhatan
 
-data class CommonMetadata(
-    val appVersion: String,
-    val platform: String? = null,
-    val environment: String? = null,
-    val extra: Map<String, String> = emptyMap()
+public data class CommonMetadata(
+    public val appVersion: String,
+    public val platform: String? = null,
+    public val environment: String? = null,
+    public val extra: Map<String, String> = emptyMap()
 ) {
-    fun asAttributes(): Map<String, String> = buildMap {
+    public fun asAttributes(): Map<String, String> = buildMap {
         put("app.version", appVersion)
         platform?.let { put("platform", it) }
         environment?.let { put("environment", it) }

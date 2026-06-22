@@ -13,15 +13,15 @@ import java.net.ProtocolException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
-class OkHttpWebSocketTelemetry internal constructor(
-    val session: WebSocketSessionTracker,
+public class OkHttpWebSocketTelemetry internal constructor(
+    public val session: WebSocketSessionTracker,
     config: OkHttpWebSocketTelemetryConfig
 ) {
     private val listenerImpl = Listener(session, config)
 
-    val listener: WebSocketListener = listenerImpl
+    public val listener: WebSocketListener = listenerImpl
 
-    fun connectionStarted(attributes: Map<String, String> = emptyMap()) {
+    public fun connectionStarted(attributes: Map<String, String> = emptyMap()) {
         session.connectionStarted(attributes)
     }
 
@@ -121,7 +121,7 @@ class OkHttpWebSocketTelemetry internal constructor(
     }
 }
 
-fun DrManhatan.okHttpWebSocketTelemetry(
+public fun DrManhatan.okHttpWebSocketTelemetry(
     config: OkHttpWebSocketTelemetryConfig
 ): OkHttpWebSocketTelemetry = OkHttpWebSocketTelemetry(
     session = webSocketSession(

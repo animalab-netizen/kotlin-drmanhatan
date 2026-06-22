@@ -1,6 +1,6 @@
 package br.com.lab.kotlin.drmanhatan
 
-class WebSocketSessionTracker(
+public class WebSocketSessionTracker(
     drManhatan: DrManhatan,
     endpoint: ProtocolEndpoint,
     sessionId: String? = null

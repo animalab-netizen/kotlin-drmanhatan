@@ -66,7 +66,7 @@ The reason is pragmatic: a communication observability library should make trans
 
 ## Status
 
-`kotlin-drmanhatan` is in early stage and evolving toward public Maven/Gradle distribution.
+`kotlin-drmanhatan` is in early public release stage and evolving through incremental compatibility-safe improvements.
 
 The API is usable and already validated through a separate consumer project, but it is still under refinement. Expect incremental improvements in publication maturity, adapter coverage and protocol semantics as the library evolves.
 
@@ -76,13 +76,13 @@ Current coordinates:
 
 - `groupId`: `io.github.animalab-netizen`
 - `artifactId`: `kotlin-drmanhatan`
-- `version`: `0.1.0`
+- `version`: `0.1.1`
 
 Dependency:
 
 ```gradle
 dependencies {
-    implementation "io.github.animalab-netizen:kotlin-drmanhatan:0.1.0"
+    implementation "io.github.animalab-netizen:kotlin-drmanhatan:0.1.1"
 }
 ```
 
@@ -115,7 +115,7 @@ repositories {
 }
 
 dependencies {
-    implementation "io.github.animalab-netizen:kotlin-drmanhatan:0.1.0"
+    implementation "io.github.animalab-netizen:kotlin-drmanhatan:0.1.1"
 }
 ```
 
@@ -170,6 +170,8 @@ Typical usage includes:
 `EventBus` publishes events to one or more observers.
 
 This keeps event production separate from event handling, so application code does not need to bind directly to a specific monitoring vendor or output mechanism.
+
+`DefaultEventBus` delivers observers in subscription order and isolates observer exceptions so a failing observer does not prevent later observers from receiving the same event. An optional error callback can be used to report those failures.
 
 ### 4. EventFactory
 
@@ -424,7 +426,7 @@ This executes:
 
 ## Compatibility Notes
 
-The library is Kotlin/JVM-first and currently validated with Java 22 in local and CI environments.
+The library is Kotlin/JVM-first, publishes with a Java 11 toolchain target, and is currently validated with a Java 22 Gradle runtime in local and CI environments.
 
 The OkHttp integration is optional and intentionally kept as an adapter layer so the core runtime remains independent from transport vendors.
 

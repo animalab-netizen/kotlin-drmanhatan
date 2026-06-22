@@ -1,13 +1,13 @@
 package br.com.lab.kotlin.drmanhatan
 
-data class ProtocolFailure(
-    val code: String? = null,
-    val type: String? = null,
-    val message: String? = null,
-    val retryable: Boolean? = null,
-    val attributes: Map<String, String> = emptyMap()
+public data class ProtocolFailure(
+    public val code: String? = null,
+    public val type: String? = null,
+    public val message: String? = null,
+    public val retryable: Boolean? = null,
+    public val attributes: Map<String, String> = emptyMap()
 ) {
-    fun asAttributes(): Map<String, String> = buildMap {
+    public fun asAttributes(): Map<String, String> = buildMap {
         code?.let { put("error.code", it) }
         type?.let { put("error.type", it) }
         message?.let { put("error.message", it) }

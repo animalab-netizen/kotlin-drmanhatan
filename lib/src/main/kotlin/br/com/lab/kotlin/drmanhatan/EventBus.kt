@@ -1,9 +1,9 @@
 package br.com.lab.kotlin.drmanhatan
 
-interface EventBus {
-    fun subscribe(observer: EventObserver)
+public interface EventBus {
+    public fun subscribe(observer: EventObserver)
 
-    fun unsubscribe(observer: EventObserver)
+    public fun unsubscribe(observer: EventObserver)
 
-    fun publish(event: Event)
+    public fun publish(event: Event)
 }

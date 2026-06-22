@@ -1,5 +1,5 @@
 package br.com.lab.kotlin.drmanhatan
 
-fun interface EventObserver {
-    fun onEvent(event: Event)
+public fun interface EventObserver {
+    public fun onEvent(event: Event)
 }

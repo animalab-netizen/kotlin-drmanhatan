@@ -2,6 +2,7 @@ package br.com.lab.kotlin.drmanhatan
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class DefaultEventBusTest {
     @Test
@@ -70,5 +71,23 @@ class DefaultEventBusTest {
 
         assertEquals("1", received.single().attributes["first"])
         assertEquals("2", received.single().attributes["second"])
+    }
+
+    @Test
+    fun `continues delivery when an observer fails`() {
+        val received = mutableListOf<String>()
+        val errors = mutableListOf<Throwable>()
+        val bus = DefaultEventBus(
+            onObserverError = { _, _, error -> errors += error }
+        )
+
+        bus.subscribe(EventObserver { throw IllegalStateException("observer failure") })
+        bus.subscribe(EventObserver { received += it.name })
+
+        bus.publish(Event(name = "resilient_event"))
+
+        assertEquals(listOf("resilient_event"), received)
+        assertEquals(1, errors.size)
+        assertIs<IllegalStateException>(errors.single())
     }
 }

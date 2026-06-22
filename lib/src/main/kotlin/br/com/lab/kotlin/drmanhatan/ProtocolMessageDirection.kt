@@ -1,6 +1,6 @@
 package br.com.lab.kotlin.drmanhatan
 
-enum class ProtocolMessageDirection {
+public enum class ProtocolMessageDirection {
     INBOUND,
     OUTBOUND
 }

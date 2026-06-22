@@ -1,7 +1,7 @@
 package br.com.lab.kotlin.drmanhatan
 
-data class HttpError(
-    val code: Int,
-    val type: String? = null,
-    val message: String? = null
+public data class HttpError(
+    public val code: Int,
+    public val type: String? = null,
+    public val message: String? = null
 )

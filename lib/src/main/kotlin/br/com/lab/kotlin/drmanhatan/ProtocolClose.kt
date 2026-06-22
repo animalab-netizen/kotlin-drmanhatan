@@ -1,12 +1,12 @@
 package br.com.lab.kotlin.drmanhatan
 
-data class ProtocolClose(
-    val code: Int? = null,
-    val reason: String? = null,
-    val graceful: Boolean? = null,
-    val attributes: Map<String, String> = emptyMap()
+public data class ProtocolClose(
+    public val code: Int? = null,
+    public val reason: String? = null,
+    public val graceful: Boolean? = null,
+    public val attributes: Map<String, String> = emptyMap()
 ) {
-    fun asAttributes(): Map<String, String> = buildMap {
+    public fun asAttributes(): Map<String, String> = buildMap {
         code?.let { put("close.code", it.toString()) }
         reason?.let { put("close.reason", it) }
         graceful?.let { put("close.graceful", it.toString()) }

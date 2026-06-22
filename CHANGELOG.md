@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- API publication hardened with Kotlin explicit API mode
+- publication target lowered to Java 11 while keeping a Java 22 Gradle runtime for build execution
+- `DefaultEventBus` now isolates observer failures so one faulty observer does not block later deliveries
+- release documentation updated with compatibility and event bus resilience notes
+
 ## 0.1.0
 
 - primeira release publica do `drmanhatan`

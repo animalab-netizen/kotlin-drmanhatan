@@ -1,12 +1,12 @@
 package br.com.lab.kotlin.drmanhatan
 
-data class Event(
-    val name: String,
-    val attributes: Map<String, String> = emptyMap()
+public data class Event(
+    public val name: String,
+    public val attributes: Map<String, String> = emptyMap()
 ) {
-    fun withAttribute(key: String, value: String): Event =
+    public fun withAttribute(key: String, value: String): Event =
         copy(attributes = attributes + (key to value))
 
-    fun withAttributes(values: Map<String, String>): Event =
+    public fun withAttributes(values: Map<String, String>): Event =
         copy(attributes = attributes + values)
 }

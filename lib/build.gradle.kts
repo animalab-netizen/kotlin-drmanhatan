@@ -12,7 +12,8 @@ val projectUrl = "https://github.com/animalab-netizen/kotlin-drmanhatan"
 val githubRepo = "animalab-netizen/kotlin-drmanhatan"
 
 kotlin {
-    jvmToolchain(22)
+    explicitApi()
+    jvmToolchain(11)
 }
 
 java {

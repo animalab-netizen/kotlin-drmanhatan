@@ -2,8 +2,9 @@ package br.com.lab.kotlin.drmanhatan
 
 import java.util.concurrent.CopyOnWriteArrayList
 
-class DefaultEventBus(
-    private val enrichers: List<EventEnricher> = emptyList()
+public class DefaultEventBus(
+    private val enrichers: List<EventEnricher> = emptyList(),
+    private val onObserverError: ((observer: EventObserver, event: Event, error: Throwable) -> Unit)? = null
 ) : EventBus {
     private val observers = CopyOnWriteArrayList<EventObserver>()
 
@@ -21,7 +22,11 @@ class DefaultEventBus(
         }
 
         observers.forEach { observer ->
-            observer.onEvent(enrichedEvent)
+            try {
+                observer.onEvent(enrichedEvent)
+            } catch (error: Throwable) {
+                onObserverError?.invoke(observer, enrichedEvent, error)
+            }
         }
     }
 }

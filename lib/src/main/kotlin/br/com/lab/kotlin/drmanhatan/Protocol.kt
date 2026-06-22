@@ -1,15 +1,15 @@
 package br.com.lab.kotlin.drmanhatan
 
-data class Protocol(
-    val name: String
+public data class Protocol(
+    public val name: String
 ) {
-    companion object {
-        val Http = Protocol("http")
-        val WebSocket = Protocol("websocket")
-        val ServerSentEvents = Protocol("sse")
-        val Grpc = Protocol("grpc")
-        val Mqtt = Protocol("mqtt")
-        val Tcp = Protocol("tcp")
-        val Udp = Protocol("udp")
+    public companion object {
+        public val Http: Protocol = Protocol("http")
+        public val WebSocket: Protocol = Protocol("websocket")
+        public val ServerSentEvents: Protocol = Protocol("sse")
+        public val Grpc: Protocol = Protocol("grpc")
+        public val Mqtt: Protocol = Protocol("mqtt")
+        public val Tcp: Protocol = Protocol("tcp")
+        public val Udp: Protocol = Protocol("udp")
     }
 }
