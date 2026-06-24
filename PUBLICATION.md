@@ -66,6 +66,16 @@ Publish to the configured remote repository with:
 ./gradlew :lib:publishMavenJavaPublicationToMavenRepository
 ```
 
+## GitHub Repository Secrets
+
+The release workflow expects these repository secrets in `animalab-netizen/kotlin-drmanhatan`:
+
+- `PUBLICATION_REPOSITORY_URL`
+- `PUBLICATION_REPOSITORY_USERNAME`
+- `PUBLICATION_REPOSITORY_PASSWORD`
+
+If `PUBLICATION_REPOSITORY_URL` is missing, `.github/workflows/release.yml` now fails instead of silently skipping publication. This avoids creating a successful release pipeline that did not actually publish the artifact.
+
 ## Release Checklist
 
 1. Run `./gradlew :lib:test`
@@ -76,6 +86,10 @@ Publish to the configured remote repository with:
 6. Confirm remote repository credentials are available when needed
 7. Create and push the release tag
 8. Let `.github/workflows/release.yml` publish and create the GitHub release
+
+## Operational Next Step
+
+To make real publication work, define the target Maven repository owned by AnimaLab and set the three GitHub secrets above. Without that repository URL and credentials, the library is release-ready but not remotely publishable.
 
 ## Workflow Notes
 

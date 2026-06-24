@@ -49,8 +49,16 @@ jobs:
           distribution: temurin
           java-version: "11"
 
+      - name: Validate publication secrets
+        env:
+          PUBLICATION_REPOSITORY_URL: ${{ secrets.PUBLICATION_REPOSITORY_URL }}
+        run: |
+          if [ -z "$PUBLICATION_REPOSITORY_URL" ]; then
+            echo "PUBLICATION_REPOSITORY_URL secret is required for release publication."
+            exit 1
+          fi
+
       - name: Publish to configured Maven repository
-        if: ${{ secrets.PUBLICATION_REPOSITORY_URL != '' }}
         env:
           ORG_GRADLE_PROJECT_publicationRepositoryUrl: ${{ secrets.PUBLICATION_REPOSITORY_URL }}
           ORG_GRADLE_PROJECT_publicationRepositoryUsername: ${{ secrets.PUBLICATION_REPOSITORY_USERNAME }}
