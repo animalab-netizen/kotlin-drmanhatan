@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "11"
+          java-version: "21"
 
       - name: Validate wrapper
         uses: gradle/actions/wrapper-validation@v3
@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "11"
+          java-version: "21"
 
       - name: Validate publication secrets
         env:
@@ -90,11 +90,15 @@ jobs:
         run: ./gradlew :lib:publishMavenJavaPublicationToMavenRepository
 
       - name: Promote uploaded deployment to Central Portal
-        if: ${{ secrets.PUBLICATION_REPOSITORY_URL == 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/' }}
         env:
+          PUBLICATION_REPOSITORY_URL: ${{ secrets.PUBLICATION_REPOSITORY_URL }}
           PUBLICATION_REPOSITORY_USERNAME: ${{ secrets.PUBLICATION_REPOSITORY_USERNAME }}
           PUBLICATION_REPOSITORY_PASSWORD: ${{ secrets.PUBLICATION_REPOSITORY_PASSWORD }}
         run: |
+          if [ "$PUBLICATION_REPOSITORY_URL" != "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/" ]; then
+            echo "Skipping Central Portal promotion because publicationRepositoryUrl is not the Sonatype compatibility endpoint."
+            exit 0
+          fi
           curl --fail --show-error --silent \
             --user "$PUBLICATION_REPOSITORY_USERNAME:$PUBLICATION_REPOSITORY_PASSWORD" \
             --request POST \
