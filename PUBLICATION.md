@@ -68,12 +68,7 @@ Those values can be provided through `~/.gradle/gradle.properties`, project-loca
 - `ORG_GRADLE_PROJECT_signingKey`
 - `ORG_GRADLE_PROJECT_signingPassword`
 
-For the current AnimaLab setup, `kotlin-drmanhatan` should use the same Sonatype Central Publisher Portal target and the same company namespace family already used by `kotlin-ode`:
-
-- repository URL: `https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/`
-- namespace: `io.github.animalab-netizen`
-- credentials: Central Portal user token credentials from the same Sonatype organization account
-- signing: the same AnimaLab publishing key pair policy used for other JVM artifacts
+For the current AnimaLab setup, `kotlin-drmanhatan` should eventually use the same organization-owned Sonatype Central and signing material already used for `kotlin-ode`, but those values should stay outside source control for now.
 
 Publish to the configured remote repository with:
 
@@ -92,19 +87,17 @@ The release workflow expects these repository secrets in `animalab-netizen/kotli
 - `SIGNING_KEY`
 - `SIGNING_PASSWORD`
 
-`PUBLICATION_REPOSITORY_USERNAME` and `PUBLICATION_REPOSITORY_PASSWORD` should be the Central Portal user token credentials, not the old OSSRH token.
-
 If `PUBLICATION_REPOSITORY_URL`, token credentials, or signing material are missing, `.github/workflows/release.yml` now fails instead of silently skipping publication. This avoids creating a successful release pipeline that did not actually publish the artifact.
 
 ## Sonatype Central Flow
 
 This repository is using Gradle's built-in `maven-publish` plugin. For Sonatype Central's current compatibility flow, that means:
 
-1. upload artifacts to `https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/`
+1. upload artifacts to the configured repository URL
 2. sign the publication with PGP
-3. call the manual upload endpoint for namespace `io.github.animalab-netizen`
+3. call the manual upload endpoint when the configured target requires that compatibility flow
 
-The release workflow now performs that final promotion call automatically after a successful upload when the configured repository URL is the Sonatype compatibility endpoint.
+The release workflow performs that final promotion call automatically only when the configured repository URL matches the Sonatype compatibility endpoint.
 
 ## Release Checklist
 

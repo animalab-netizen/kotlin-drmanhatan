@@ -1,13 +1,13 @@
 # Copy the values you need into ~/.gradle/gradle.properties
 # or export them as environment variables before publishing.
 
-publicationRepositoryUrl=https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/
-publicationRepositoryUsername=central-portal-token-username
-publicationRepositoryPassword=central-portal-token-password
-publicationNamespace=io.github.animalab-netizen
+publicationRepositoryUrl=
+publicationRepositoryUsername=
+publicationRepositoryPassword=
+publicationNamespace=
 signingKeyId=
-signingKey=-----BEGIN PGP PRIVATE KEY BLOCK-----
-signingPassword=your-signing-passphrase
+signingKey=
+signingPassword=
 
 organizationUrlKotlinDrManhatan=https://github.com/animalab-netizen
 scmUrlKotlinDrManhatan=https://github.com/animalab-netizen/kotlin-drmanhatan
