@@ -14,7 +14,8 @@ This document describes the publication strategy for `kotlin-drmanhatan`.
 The library is configured for:
 
 - local publication with `publishToMavenLocal`
-- remote publication to a Maven repository provided through Gradle properties or CI secrets
+- bundle generation for Sonatype Central Publisher API
+- optional remote publication to a Maven repository provided through Gradle properties or CI secrets
 - generation of JAR, sources JAR, javadoc JAR, POM and Gradle module metadata
 - maintainer, license, organization and SCM metadata in the published POM
 
@@ -53,7 +54,6 @@ The publication target is configured through:
 - `publicationRepositoryUrl`
 - `publicationRepositoryUsername`
 - `publicationRepositoryPassword`
-- `publicationNamespace`
 - `signingKeyId`
 - `signingKey`
 - `signingPassword`
@@ -63,17 +63,16 @@ Those values can be provided through `~/.gradle/gradle.properties`, project-loca
 - `ORG_GRADLE_PROJECT_publicationRepositoryUrl`
 - `ORG_GRADLE_PROJECT_publicationRepositoryUsername`
 - `ORG_GRADLE_PROJECT_publicationRepositoryPassword`
-- `ORG_GRADLE_PROJECT_publicationNamespace`
 - `ORG_GRADLE_PROJECT_signingKeyId`
 - `ORG_GRADLE_PROJECT_signingKey`
 - `ORG_GRADLE_PROJECT_signingPassword`
 
 For the current AnimaLab setup, `kotlin-drmanhatan` should eventually use the same organization-owned Sonatype Central and signing material already used for `kotlin-ode`, but those values should stay outside source control for now.
 
-Publish to the configured remote repository with:
+Build a Sonatype Central bundle locally with:
 
 ```bash
-./gradlew :lib:publishMavenJavaPublicationToMavenRepository
+./gradlew :lib:packageCentralBundle
 ```
 
 ## GitHub Repository Secrets
@@ -87,17 +86,19 @@ The release workflow expects these repository secrets in `animalab-netizen/kotli
 - `SIGNING_KEY`
 - `SIGNING_PASSWORD`
 
-If `PUBLICATION_REPOSITORY_URL`, token credentials, or signing material are missing, `.github/workflows/release.yml` now fails instead of silently skipping publication. This avoids creating a successful release pipeline that did not actually publish the artifact.
+If token credentials or signing material are missing, `.github/workflows/release.yml` now fails instead of silently skipping publication. This avoids creating a successful release pipeline that did not actually publish the artifact.
 
 ## Sonatype Central Flow
 
-This repository is using Gradle's built-in `maven-publish` plugin. For Sonatype Central's current compatibility flow, that means:
+This repository now uses Gradle's built-in `maven-publish` plugin to create a signed Maven bundle, then uploads that bundle to Sonatype Central Publisher API.
 
-1. upload artifacts to the configured repository URL
+1. publish `mavenJava` to the local `CentralBundle` repository under `lib/build/central-bundle/repository`
 2. sign the publication with PGP
-3. call the manual upload endpoint when the configured target requires that compatibility flow
+3. package the repository tree into `lib/build/central-bundle/dist/kotlin-drmanhatan-<version>-central-bundle.zip`
+4. upload the bundle to `https://central.sonatype.com/api/v1/publisher/upload`
+5. poll the deployment until Sonatype reports `PUBLISHED`
 
-The release workflow performs that final promotion call automatically only when the configured repository URL matches the Sonatype compatibility endpoint.
+This avoids the older OSSRH compatibility `manual/*` endpoints, which were returning `Endpoint ... not supported` for this repository setup.
 
 ## Release Checklist
 
@@ -118,5 +119,6 @@ To make real publication work, keep `kotlin-drmanhatan` on the same Sonatype Cen
 
 - CI runs from `.github/workflows/ci.yml`
 - tag releases run from `.github/workflows/release.yml`
-- remote publication uses `PUBLICATION_REPOSITORY_URL`, `PUBLICATION_REPOSITORY_USERNAME` and `PUBLICATION_REPOSITORY_PASSWORD`
+- Central publication uses `PUBLICATION_REPOSITORY_USERNAME`, `PUBLICATION_REPOSITORY_PASSWORD`, `SIGNING_KEY_ID`, `SIGNING_KEY` and `SIGNING_PASSWORD`
+- `PUBLICATION_REPOSITORY_URL` remains declared for parity with `kotlin-ode` and optional repository-based publication
 - GitHub Releases are created automatically for version tags

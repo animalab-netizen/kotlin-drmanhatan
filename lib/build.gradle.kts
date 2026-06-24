@@ -9,6 +9,9 @@ group = providers.gradleProperty("group").get()
 version = providers.gradleProperty("version").get()
 
 val projectUrl = "https://github.com/animalab-netizen/kotlin-drmanhatan"
+val publicationGroup = group.toString()
+val publicationVersion = version.toString()
+val publicationArtifactId = "kotlin-drmanhatan"
 val pomOrganizationUrl = providers.gradleProperty("organizationUrlKotlinDrManhatan").orNull
 val scmUrl = providers.gradleProperty("scmUrlKotlinDrManhatan").orNull
 val scmConnection = providers.gradleProperty("scmConnectionKotlinDrManhatan").orNull
@@ -23,6 +26,8 @@ val signingKey = providers.gradleProperty("signingKey").orNull
     ?: providers.environmentVariable("SIGNING_KEY").orNull
 val signingPassword = providers.gradleProperty("signingPassword").orNull
     ?: providers.environmentVariable("SIGNING_PASSWORD").orNull
+val centralBundleRepositoryDir = layout.buildDirectory.dir("central-bundle/repository")
+val centralBundleDistDir = layout.buildDirectory.dir("central-bundle/dist")
 
 kotlin {
     explicitApi()
@@ -53,10 +58,10 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-            artifactId = "kotlin-drmanhatan"
+            artifactId = publicationArtifactId
 
             pom {
-                name.set("kotlin-drmanhatan")
+                name.set(publicationArtifactId)
                 description.set("Observable event support for Kotlin applications without coupling to analytics vendors.")
                 url.set(projectUrl)
 
@@ -98,6 +103,11 @@ publishing {
     repositories {
         mavenLocal()
 
+        maven {
+            name = "CentralBundle"
+            url = uri(centralBundleRepositoryDir)
+        }
+
         if (!publicationRepositoryUrl.isNullOrBlank()) {
             maven {
                 name = "MavenRepository"
@@ -114,10 +124,15 @@ publishing {
 signing {
     val remotePublishRequested = gradle.startParameter.taskNames.any { taskName ->
         taskName.contains("publish", ignoreCase = true) &&
-            taskName.contains("MavenRepository", ignoreCase = true)
+            (
+                taskName.contains("MavenRepository", ignoreCase = true) ||
+                    taskName.contains("CentralBundle", ignoreCase = true)
+                )
     }
 
-    isRequired = !publicationRepositoryUrl.isNullOrBlank() && remotePublishRequested
+    val needsSigning = remotePublishRequested
+
+    isRequired = needsSigning
 
     if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
         if (!signingKeyId.isNullOrBlank()) {
@@ -127,4 +142,12 @@ signing {
         }
         sign(publishing.publications["mavenJava"])
     }
+}
+
+tasks.register<Zip>("packageCentralBundle") {
+    dependsOn("publishMavenJavaPublicationToCentralBundleRepository")
+
+    from(centralBundleRepositoryDir)
+    destinationDirectory.set(centralBundleDistDir)
+    archiveFileName.set("$publicationArtifactId-$publicationVersion-central-bundle.zip")
 }

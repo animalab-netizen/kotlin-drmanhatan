@@ -54,19 +54,20 @@ jobs:
           PUBLICATION_REPOSITORY_URL: ${{ secrets.PUBLICATION_REPOSITORY_URL }}
           PUBLICATION_REPOSITORY_USERNAME: ${{ secrets.PUBLICATION_REPOSITORY_USERNAME }}
           PUBLICATION_REPOSITORY_PASSWORD: ${{ secrets.PUBLICATION_REPOSITORY_PASSWORD }}
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
-          if [ -z "$PUBLICATION_REPOSITORY_URL" ]; then
-            echo "PUBLICATION_REPOSITORY_URL secret is required for release publication."
-            exit 1
-          fi
           if [ -z "$PUBLICATION_REPOSITORY_USERNAME" ]; then
             echo "PUBLICATION_REPOSITORY_USERNAME secret is required for release publication."
             exit 1
           fi
           if [ -z "$PUBLICATION_REPOSITORY_PASSWORD" ]; then
             echo "PUBLICATION_REPOSITORY_PASSWORD secret is required for release publication."
+            exit 1
+          fi
+          if [ -z "$SIGNING_KEY_ID" ]; then
+            echo "SIGNING_KEY_ID secret is required for Central publication."
             exit 1
           fi
           if [ -z "$SIGNING_KEY" ]; then
@@ -78,34 +79,85 @@ jobs:
             exit 1
           fi
 
-      - name: Publish to configured Maven repository
+      - name: Build Central bundle
         env:
-          ORG_GRADLE_PROJECT_publicationRepositoryUrl: ${{ secrets.PUBLICATION_REPOSITORY_URL }}
-          ORG_GRADLE_PROJECT_publicationRepositoryUsername: ${{ secrets.PUBLICATION_REPOSITORY_USERNAME }}
-          ORG_GRADLE_PROJECT_publicationRepositoryPassword: ${{ secrets.PUBLICATION_REPOSITORY_PASSWORD }}
-          ORG_GRADLE_PROJECT_publicationNamespace: io.github.animalab-netizen
           ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew :lib:publishMavenJavaPublicationToMavenRepository
+        run: ./gradlew :lib:packageCentralBundle
 
-      - name: Promote uploaded deployment to Central Portal
+      - name: Publish bundle to Central Portal
         env:
-          PUBLICATION_REPOSITORY_URL: ${{ secrets.PUBLICATION_REPOSITORY_URL }}
           PUBLICATION_REPOSITORY_USERNAME: ${{ secrets.PUBLICATION_REPOSITORY_USERNAME }}
           PUBLICATION_REPOSITORY_PASSWORD: ${{ secrets.PUBLICATION_REPOSITORY_PASSWORD }}
         run: |
-          if [ "$PUBLICATION_REPOSITORY_URL" != "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/" ]; then
-            echo "Skipping Central Portal promotion because publicationRepositoryUrl is not the Sonatype compatibility endpoint."
-            exit 0
+          CENTRAL_TOKEN=$(printf '%s' "$PUBLICATION_REPOSITORY_USERNAME:$PUBLICATION_REPOSITORY_PASSWORD" | base64 | tr -d '\n')
+          BUNDLE_PATH=$(find lib/build/central-bundle/dist -maxdepth 1 -type f -name '*.zip' | head -n 1)
+
+          if [ -z "$BUNDLE_PATH" ]; then
+            echo "Central bundle was not generated."
+            exit 1
           fi
 
-          CENTRAL_TOKEN=$(printf '%s' "$PUBLICATION_REPOSITORY_USERNAME:$PUBLICATION_REPOSITORY_PASSWORD" | base64 | tr -d '\n')
+          DEPLOYMENT_NAME="io.github.animalab-netizen:kotlin-drmanhatan:${GITHUB_REF_NAME#v}"
+          ENCODED_DEPLOYMENT_NAME=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$DEPLOYMENT_NAME")
 
-          curl --fail --show-error --silent \
-            --header "Authorization: Bearer $CENTRAL_TOKEN" \
-            --request POST \
-            "https://ossrh-staging-api.central.sonatype.com/service/local/staging/manual/upload/defaultRepository/io.github.animalab-netizen?publishing_type=automatic"
+          DEPLOYMENT_ID=$(
+            curl --fail --show-error --silent \
+              --request POST \
+              --header "Authorization: Bearer $CENTRAL_TOKEN" \
+              --form "bundle=@${BUNDLE_PATH}" \
+              "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC&name=${ENCODED_DEPLOYMENT_NAME}"
+          )
+
+          echo "Deployment ID: $DEPLOYMENT_ID"
+
+          python3 - "$CENTRAL_TOKEN" "$DEPLOYMENT_ID" <<'PY'
+import json
+import sys
+import time
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
+
+token = sys.argv[1]
+deployment_id = sys.argv[2]
+url = f"https://central.sonatype.com/api/v1/publisher/status?id={deployment_id}"
+terminal_states = {"PUBLISHED", "FAILED", "VALIDATED"}
+
+for attempt in range(1, 41):
+    request = Request(url, method="POST", headers={"Authorization": f"Bearer {token}"})
+    try:
+        with urlopen(request) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as error:
+        body = error.read().decode("utf-8", errors="replace")
+        print(body)
+        raise
+
+    state = payload.get("deploymentState", "UNKNOWN")
+    print(f"[{attempt}/40] deploymentState={state}")
+
+    if state == "PUBLISHED":
+        break
+
+    if state == "FAILED":
+        print(json.dumps(payload, indent=2))
+        raise SystemExit(1)
+
+    if state == "VALIDATED":
+        publish_request = Request(
+            f"https://central.sonatype.com/api/v1/publisher/deployment/{deployment_id}",
+            method="POST",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        with urlopen(publish_request):
+            pass
+        print("Deployment was VALIDATED; publish request sent.")
+
+    time.sleep(15)
+else:
+    raise SystemExit("Timed out waiting for Central Portal deployment to finish.")
+PY
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
