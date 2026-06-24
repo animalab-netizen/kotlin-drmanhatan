@@ -2,14 +2,21 @@ plugins {
     kotlin("jvm") version "2.0.21"
     `java-library`
     `maven-publish`
-    signing
 }
 
 group = providers.gradleProperty("group").get()
 version = providers.gradleProperty("version").get()
 
 val projectUrl = "https://github.com/animalab-netizen/kotlin-drmanhatan"
-val githubRepo = "animalab-netizen/kotlin-drmanhatan"
+val pomOrganizationUrl = providers.gradleProperty("organizationUrlKotlinDrManhatan").orNull
+val scmUrl = providers.gradleProperty("scmUrlKotlinDrManhatan").orNull
+val scmConnection = providers.gradleProperty("scmConnectionKotlinDrManhatan").orNull
+val scmDeveloperConnection = providers.gradleProperty("scmDeveloperConnectionKotlinDrManhatan").orNull
+val publicationRepositoryUrl = providers.gradleProperty("publicationRepositoryUrl").orNull
+val publicationRepositoryUsername = providers.gradleProperty("publicationRepositoryUsername").orNull
+    ?: providers.environmentVariable("MAVEN_USERNAME").orNull
+val publicationRepositoryPassword = providers.gradleProperty("publicationRepositoryPassword").orNull
+    ?: providers.environmentVariable("MAVEN_PASSWORD").orNull
 
 kotlin {
     explicitApi()
@@ -58,55 +65,42 @@ publishing {
                     developer {
                         id.set("animalab")
                         name.set("AnimaLab")
+                        email.set("animalab.desenvolvimento@gmail.com")
+                        organization.set("AnimaLab")
+                        if (!pomOrganizationUrl.isNullOrBlank()) {
+                            organizationUrl.set(pomOrganizationUrl)
+                        }
+                    }
+                }
+
+                organization {
+                    name.set("AnimaLab")
+                    if (!pomOrganizationUrl.isNullOrBlank()) {
+                        url.set(pomOrganizationUrl)
                     }
                 }
 
                 scm {
-                    url.set(projectUrl)
-                    connection.set("scm:git:$projectUrl.git")
-                    developerConnection.set("scm:git:$projectUrl.git")
+                    url.set(scmUrl ?: projectUrl)
+                    connection.set(scmConnection ?: "scm:git:$projectUrl.git")
+                    developerConnection.set(scmDeveloperConnection ?: "scm:git:git@github.com:animalab-netizen/kotlin-drmanhatan.git")
                 }
             }
         }
     }
 
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/$githubRepo")
-            credentials {
-                username = providers.environmentVariable("GITHUB_ACTOR").orNull
-                    ?: providers.gradleProperty("gpr.user").orNull
-                password = providers.environmentVariable("GITHUB_TOKEN").orNull
-                    ?: providers.gradleProperty("gpr.key").orNull
+        mavenLocal()
+
+        if (!publicationRepositoryUrl.isNullOrBlank()) {
+            maven {
+                name = "MavenRepository"
+                url = uri(publicationRepositoryUrl)
+                credentials {
+                    username = publicationRepositoryUsername
+                    password = publicationRepositoryPassword
+                }
             }
         }
-
-        maven {
-            name = "Sonatype"
-            val releasesUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            val snapshotsUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-            url = uri(
-                if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
-            )
-            credentials {
-                username = providers.environmentVariable("OSSRH_USERNAME").orNull
-                    ?: providers.gradleProperty("ossrhUsername").orNull
-                password = providers.environmentVariable("OSSRH_PASSWORD").orNull
-                    ?: providers.gradleProperty("ossrhPassword").orNull
-            }
-        }
-    }
-}
-
-signing {
-    val signingKey = providers.environmentVariable("SIGNING_KEY").orNull
-        ?: providers.gradleProperty("signingKey").orNull
-    val signingPassword = providers.environmentVariable("SIGNING_PASSWORD").orNull
-        ?: providers.gradleProperty("signingPassword").orNull
-
-    if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
-        useInMemoryPgpKeys(signingKey, signingPassword)
-        sign(publishing.publications)
     }
 }

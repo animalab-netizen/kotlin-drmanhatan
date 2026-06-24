@@ -1,4 +1,4 @@
-name: CI
+name: Kotlin DrManhatan CI
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,13 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "22"
+          java-version: "11"
+
+      - name: Validate wrapper
+        uses: gradle/actions/wrapper-validation@v3
 
       - name: Run tests
         run: ./gradlew :lib:test
+
+      - name: Validate local Maven publication
+        run: ./gradlew :lib:publishToMavenLocal
