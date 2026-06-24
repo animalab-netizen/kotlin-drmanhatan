@@ -53,12 +53,27 @@ The publication target is configured through:
 - `publicationRepositoryUrl`
 - `publicationRepositoryUsername`
 - `publicationRepositoryPassword`
+- `publicationNamespace`
+- `signingKeyId`
+- `signingKey`
+- `signingPassword`
 
 Those values can be provided through `~/.gradle/gradle.properties`, project-local untracked overrides, or CI secrets exported as:
 
 - `ORG_GRADLE_PROJECT_publicationRepositoryUrl`
 - `ORG_GRADLE_PROJECT_publicationRepositoryUsername`
 - `ORG_GRADLE_PROJECT_publicationRepositoryPassword`
+- `ORG_GRADLE_PROJECT_publicationNamespace`
+- `ORG_GRADLE_PROJECT_signingKeyId`
+- `ORG_GRADLE_PROJECT_signingKey`
+- `ORG_GRADLE_PROJECT_signingPassword`
+
+For the current AnimaLab setup, `kotlin-drmanhatan` should use the same Sonatype Central Publisher Portal target and the same company namespace family already used by `kotlin-ode`:
+
+- repository URL: `https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/`
+- namespace: `io.github.animalab-netizen`
+- credentials: Central Portal user token credentials from the same Sonatype organization account
+- signing: the same AnimaLab publishing key pair policy used for other JVM artifacts
 
 Publish to the configured remote repository with:
 
@@ -73,8 +88,23 @@ The release workflow expects these repository secrets in `animalab-netizen/kotli
 - `PUBLICATION_REPOSITORY_URL`
 - `PUBLICATION_REPOSITORY_USERNAME`
 - `PUBLICATION_REPOSITORY_PASSWORD`
+- `SIGNING_KEY_ID`
+- `SIGNING_KEY`
+- `SIGNING_PASSWORD`
 
-If `PUBLICATION_REPOSITORY_URL` is missing, `.github/workflows/release.yml` now fails instead of silently skipping publication. This avoids creating a successful release pipeline that did not actually publish the artifact.
+`PUBLICATION_REPOSITORY_USERNAME` and `PUBLICATION_REPOSITORY_PASSWORD` should be the Central Portal user token credentials, not the old OSSRH token.
+
+If `PUBLICATION_REPOSITORY_URL`, token credentials, or signing material are missing, `.github/workflows/release.yml` now fails instead of silently skipping publication. This avoids creating a successful release pipeline that did not actually publish the artifact.
+
+## Sonatype Central Flow
+
+This repository is using Gradle's built-in `maven-publish` plugin. For Sonatype Central's current compatibility flow, that means:
+
+1. upload artifacts to `https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/`
+2. sign the publication with PGP
+3. call the manual upload endpoint for namespace `io.github.animalab-netizen`
+
+The release workflow now performs that final promotion call automatically after a successful upload when the configured repository URL is the Sonatype compatibility endpoint.
 
 ## Release Checklist
 
@@ -89,7 +119,7 @@ If `PUBLICATION_REPOSITORY_URL` is missing, `.github/workflows/release.yml` now 
 
 ## Operational Next Step
 
-To make real publication work, define the target Maven repository owned by AnimaLab and set the three GitHub secrets above. Without that repository URL and credentials, the library is release-ready but not remotely publishable.
+To make real publication work, keep `kotlin-drmanhatan` on the same Sonatype Central organization and token model as `kotlin-ode`, and set the six GitHub secrets above. Without token credentials and signing material, the library is release-ready but not publishable to Central.
 
 ## Workflow Notes
 

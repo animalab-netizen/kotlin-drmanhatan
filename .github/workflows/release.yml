@@ -52,9 +52,29 @@ jobs:
       - name: Validate publication secrets
         env:
           PUBLICATION_REPOSITORY_URL: ${{ secrets.PUBLICATION_REPOSITORY_URL }}
+          PUBLICATION_REPOSITORY_USERNAME: ${{ secrets.PUBLICATION_REPOSITORY_USERNAME }}
+          PUBLICATION_REPOSITORY_PASSWORD: ${{ secrets.PUBLICATION_REPOSITORY_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           if [ -z "$PUBLICATION_REPOSITORY_URL" ]; then
             echo "PUBLICATION_REPOSITORY_URL secret is required for release publication."
+            exit 1
+          fi
+          if [ -z "$PUBLICATION_REPOSITORY_USERNAME" ]; then
+            echo "PUBLICATION_REPOSITORY_USERNAME secret is required for release publication."
+            exit 1
+          fi
+          if [ -z "$PUBLICATION_REPOSITORY_PASSWORD" ]; then
+            echo "PUBLICATION_REPOSITORY_PASSWORD secret is required for release publication."
+            exit 1
+          fi
+          if [ -z "$SIGNING_KEY" ]; then
+            echo "SIGNING_KEY secret is required for Central publication."
+            exit 1
+          fi
+          if [ -z "$SIGNING_PASSWORD" ]; then
+            echo "SIGNING_PASSWORD secret is required for Central publication."
             exit 1
           fi
 
@@ -63,7 +83,22 @@ jobs:
           ORG_GRADLE_PROJECT_publicationRepositoryUrl: ${{ secrets.PUBLICATION_REPOSITORY_URL }}
           ORG_GRADLE_PROJECT_publicationRepositoryUsername: ${{ secrets.PUBLICATION_REPOSITORY_USERNAME }}
           ORG_GRADLE_PROJECT_publicationRepositoryPassword: ${{ secrets.PUBLICATION_REPOSITORY_PASSWORD }}
+          ORG_GRADLE_PROJECT_publicationNamespace: io.github.animalab-netizen
+          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew :lib:publishMavenJavaPublicationToMavenRepository
+
+      - name: Promote uploaded deployment to Central Portal
+        if: ${{ secrets.PUBLICATION_REPOSITORY_URL == 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/' }}
+        env:
+          PUBLICATION_REPOSITORY_USERNAME: ${{ secrets.PUBLICATION_REPOSITORY_USERNAME }}
+          PUBLICATION_REPOSITORY_PASSWORD: ${{ secrets.PUBLICATION_REPOSITORY_PASSWORD }}
+        run: |
+          curl --fail --show-error --silent \
+            --user "$PUBLICATION_REPOSITORY_USERNAME:$PUBLICATION_REPOSITORY_PASSWORD" \
+            --request POST \
+            "https://ossrh-staging-api.central.sonatype.com/service/local/staging/manual/upload/defaultRepository/io.github.animalab-netizen"
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')

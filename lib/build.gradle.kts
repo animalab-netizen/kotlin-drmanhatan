@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "2.0.21"
     `java-library`
     `maven-publish`
+    signing
 }
 
 group = providers.gradleProperty("group").get()
@@ -17,6 +18,11 @@ val publicationRepositoryUsername = providers.gradleProperty("publicationReposit
     ?: providers.environmentVariable("MAVEN_USERNAME").orNull
 val publicationRepositoryPassword = providers.gradleProperty("publicationRepositoryPassword").orNull
     ?: providers.environmentVariable("MAVEN_PASSWORD").orNull
+val signingKeyId = providers.gradleProperty("signingKeyId").orNull
+val signingKey = providers.gradleProperty("signingKey").orNull
+    ?: providers.environmentVariable("SIGNING_KEY").orNull
+val signingPassword = providers.gradleProperty("signingPassword").orNull
+    ?: providers.environmentVariable("SIGNING_PASSWORD").orNull
 
 kotlin {
     explicitApi()
@@ -102,5 +108,23 @@ publishing {
                 }
             }
         }
+    }
+}
+
+signing {
+    val remotePublishRequested = gradle.startParameter.taskNames.any { taskName ->
+        taskName.contains("publish", ignoreCase = true) &&
+            taskName.contains("MavenRepository", ignoreCase = true)
+    }
+
+    isRequired = !publicationRepositoryUrl.isNullOrBlank() && remotePublishRequested
+
+    if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
+        if (!signingKeyId.isNullOrBlank()) {
+            useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+        } else {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
+        sign(publishing.publications["mavenJava"])
     }
 }
